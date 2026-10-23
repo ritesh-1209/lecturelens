@@ -1,0 +1,271 @@
+<!-- LectureLens Notes Display Component -->
+<div id="notesContainer" class="notes-container" style="display: none;">
+  <!-- Results Action Header Bar -->
+  <div class="results-header-card">
+    <div class="results-header-info">
+      <div class="results-badge-row">
+        <span class="badge badge-accent" id="resultSubjectBadge">Subject</span>
+        <span class="badge badge-secondary" id="resultLangBadge">Language: Auto</span>
+        <span class="badge badge-outline" id="resultDetailBadge">Standard Detail</span>
+        <span class="badge badge-subtle" id="resultWordCountBadge">0 words</span>
+      </div>
+      <h2 class="results-title" id="resultTitle">Lecture Title</h2>
+    </div>
+
+    <div class="results-actions-group">
+      <!-- Export Dropdown / Buttons -->
+      <div class="export-btn-group">
+        <button type="button" class="btn btn-outline" id="exportMdBtn" title="Download Markdown format">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Markdown (.md)
+        </button>
+        <button type="button" class="btn btn-outline" id="exportTxtBtn" title="Download Plain Text format">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          Text (.txt)
+        </button>
+        <button type="button" class="btn btn-primary" id="exportPdfBtn" title="Download Formatted PDF">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M6 9V2h12v7"></path>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <path d="M6 14h12v8H6z"></path>
+          </svg>
+          Download PDF
+        </button>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="secondary-actions">
+        <button type="button" class="btn btn-ghost" id="editTranscriptBtn" title="Scroll back to edit transcript">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+          Edit Transcript
+        </button>
+        <button type="button" class="btn btn-ghost text-danger" id="clearNotesBtn" title="Clear generated notes">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          Clear Result
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Study Views Navigation Tabs -->
+  <div class="study-tabs-nav">
+    <button class="study-tab-btn active" data-tab="tab-study-notes">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+      </svg>
+      Study Notes
+    </button>
+    <button class="study-tab-btn" data-tab="tab-flashcards" id="tabFlashcardsBtn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+      </svg>
+      Flashcards <span class="tab-count-badge" id="flashcardsCount">0</span>
+    </button>
+    <button class="study-tab-btn" data-tab="tab-questions" id="tabQuestionsBtn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      Exam Questions <span class="tab-count-badge" id="questionsCount">0</span>
+    </button>
+  </div>
+
+  <!-- Tab 1: Comprehensive Study Notes -->
+  <div id="tab-study-notes" class="study-tab-content active">
+    <!-- Overview & Executive Summary Cards -->
+    <div class="summary-grid">
+      <div class="summary-card" id="overviewCard">
+        <div class="card-header-icon">
+          <span class="icon-wrap bg-blue-subtle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+          </span>
+          <h3>Lecture Overview</h3>
+        </div>
+        <p class="summary-body" id="overviewText">Overview will appear here.</p>
+      </div>
+
+      <div class="summary-card" id="execSummaryCard">
+        <div class="card-header-icon">
+          <span class="icon-wrap bg-indigo-subtle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+          </span>
+          <h3>Executive Summary</h3>
+        </div>
+        <p class="summary-body" id="execSummaryText">Executive summary will appear here.</p>
+      </div>
+    </div>
+
+    <!-- Structured Notes Section with Accordion / Clear Sections -->
+    <div class="content-section" id="structuredNotesSection">
+      <div class="section-title-bar">
+        <h3>Structured Notes</h3>
+        <button type="button" class="btn btn-xs btn-ghost" id="toggleAllSectionsBtn">Collapse All</button>
+      </div>
+      <div class="structured-notes-list" id="structuredNotesList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- Key Concepts Explained Simply -->
+    <div class="content-section" id="keyConceptsSection">
+      <div class="section-title-bar">
+        <h3>Key Concepts Explained Simply</h3>
+      </div>
+      <div class="key-concepts-grid" id="keyConceptsList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- Key Terms Glossary -->
+    <div class="content-section" id="keyTermsSection">
+      <div class="section-title-bar">
+        <h3>Key Terms & Definitions</h3>
+      </div>
+      <div class="terms-table-wrapper">
+        <table class="terms-table">
+          <thead>
+            <tr>
+              <th style="width: 30%;">Term</th>
+              <th>Definition</th>
+            </tr>
+          </thead>
+          <tbody id="keyTermsTableBody">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Examples, Formulas, Calculations & Code -->
+    <div class="content-section" id="examplesSection">
+      <div class="section-title-bar">
+        <h3>Formulas, Calculations & Code Examples</h3>
+      </div>
+      <div class="examples-list" id="examplesList">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- Important Facts to Remember -->
+    <div class="content-section" id="factsSection">
+      <div class="section-title-bar">
+        <h3>Important Facts to Remember</h3>
+      </div>
+      <ul class="facts-list" id="factsList">
+        <!-- Rendered dynamically -->
+      </ul>
+    </div>
+
+    <!-- Final Revision Summary -->
+    <div class="content-section" id="revisionSection">
+      <div class="revision-card">
+        <div class="card-header-icon">
+          <span class="icon-wrap bg-green-subtle">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+          </span>
+          <h3>Final Exam-Eve Revision Wrap-Up</h3>
+        </div>
+        <p class="summary-body" id="revisionText"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tab 2: Interactive Flashcards -->
+  <div id="tab-flashcards" class="study-tab-content">
+    <div class="flashcards-toolbar">
+      <div class="flashcards-stats">
+        Card <span id="currentCardIndex">1</span> of <span id="totalCardsCount">0</span>
+      </div>
+      <div class="flashcards-view-toggle">
+        <button type="button" class="btn btn-sm btn-ghost active" id="fcModeCarouselBtn">Interactive Flip</button>
+        <button type="button" class="btn btn-sm btn-ghost" id="fcModeGridBtn">All Cards Grid</button>
+      </div>
+    </div>
+
+    <!-- Carousel Mode -->
+    <div class="flashcard-carousel-area" id="fcCarouselContainer">
+      <div class="flashcard-stage">
+        <div class="flip-card" id="activeFlipCard" tabindex="0" role="button" aria-label="Flashcard. Press Enter or click to flip.">
+          <div class="flip-card-inner">
+            <div class="flip-card-front">
+              <div class="card-side-tag">QUESTION / PROMPT</div>
+              <div class="card-category-pill" id="cardCategory">Category</div>
+              <div class="card-text-content" id="cardFrontText">Prompt here</div>
+              <div class="card-flip-prompt">Click or press Space to flip ↺</div>
+            </div>
+            <div class="flip-card-back">
+              <div class="card-side-tag">ANSWER / EXPLANATION</div>
+              <div class="card-text-content" id="cardBackText">Answer here</div>
+              <div class="card-flip-prompt">Click to flip back ↻</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="carousel-nav-controls">
+        <button type="button" class="btn btn-outline" id="prevCardBtn" aria-label="Previous Flashcard">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Previous
+        </button>
+        <button type="button" class="btn btn-outline" id="flipCardBtn">
+          Flip Card
+        </button>
+        <button type="button" class="btn btn-outline" id="nextCardBtn" aria-label="Next Flashcard">
+          Next
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Grid Mode (Hidden by default) -->
+    <div class="flashcards-grid" id="fcGridContainer" style="display: none;">
+      <!-- Rendered dynamically -->
+    </div>
+  </div>
+
+  <!-- Tab 3: Practice Exam Questions -->
+  <div id="tab-questions" class="study-tab-content">
+    <div class="questions-header-bar">
+      <p class="section-desc">Test your understanding of the lecture with realistic exam questions. Click each question to reveal its model answer.</p>
+      <button type="button" class="btn btn-sm btn-ghost" id="revealAllAnswersBtn">Reveal All Answers</button>
+    </div>
+    <div class="questions-accordion-list" id="questionsList">
+      <!-- Rendered dynamically -->
+    </div>
+  </div>
+</div>

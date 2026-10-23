@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="LectureLens — Turn lecture transcripts and audio recordings into structured, easy-to-revise study notes, flashcards, and exam questions using Google Gemini.">
+  <title>LectureLens — Turn Lectures into Learning</title>
+  
+  <!-- Modern Typography from Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Confirmation Modal -->
+  <div id="confirmModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-icon-wrap text-warning">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </div>
+      <h3 id="modalTitle">Clear Generated Notes?</h3>
+      <p id="modalMessage">This will clear your current notes and flashcards. Make sure you have exported your notes if you need to keep them.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="modalCancelBtn">Cancel</button>
+        <button type="button" class="btn btn-danger" id="modalConfirmBtn">Yes, Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <header class="app-header">
+    <div class="container header-container">
+      <a href="/" class="brand-link">
+        <div class="brand-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9"></circle>
+            <path d="M12 3a9 9 0 0 1 9 9"></path>
+            <circle cx="12" cy="12" r="3.5"></circle>
+            <line x1="14.5" y1="14.5" x2="18.5" y2="18.5"></line>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <span class="brand-name">LectureLens</span>
+          <span class="brand-badge">Study Assistant</span>
+        </div>
+      </a>
+
+      <nav class="nav-links">
+        <a href="#how-it-works" class="nav-item">How It Works</a>
+        <a href="#features" class="nav-item">Features</a>
+        <a href="#studio" class="nav-item">Studio</a>
+        <a href="#privacy" class="nav-item">Privacy & Safety</a>
+      </nav>
+
+      <div class="header-cta">
+        {% if not has_api_key %}
+        <span class="badge badge-warning" title="Gemini API Key is not set in server environment">
+          API Key Required
+        </span>
+        {% else %}
+        <span class="badge badge-success" title="Server is connected to Google Gemini API">
+          Gemini 2.5 Ready
+        </span>
+        {% endif %}
+        <a href="#studio" class="btn btn-primary btn-sm">Generate Notes</a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Missing API Key Alert Notice (if applicable) -->
+  {% if not has_api_key %}
+  <div class="api-notice-banner">
+    <div class="container banner-inner">
+      <div class="banner-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <div class="banner-text">
+        <strong>Setup Reminder:</strong> <code>GEMINI_API_KEY</code> is not yet configured in your <code>.env</code> file. Add your key from <a href="https://aistudio.google.com/" target="_blank" rel="noopener">Google AI Studio</a> to enable AI transcription and notes generation.
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <main>
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="container hero-container">
+        <div class="hero-badge">
+          <span class="badge-sparkle">✨</span> Powered by Google Gemini API
+        </div>
+        <h1 class="hero-headline">
+          Turn lectures into <span class="gradient-text">learning.</span>
+        </h1>
+        <p class="hero-subtitle">
+          Transform raw transcripts and audio recordings into structured academic study notes, key concept explanations, interactive flashcards, and exam revision questions in seconds.
+        </p>
+
+        <div class="hero-actions">
+          <a href="#studio" class="btn btn-primary btn-lg shadow-glow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            Open Notes Studio
+          </a>
+          <button type="button" class="btn btn-outline btn-lg" id="heroSampleBtn">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+            Try Sample Lecture
+          </button>
+        </div>
+
+        <!-- Quick Stats / Highlights -->
+        <div class="hero-pills-row">
+          <div class="pill-item">
+            <span class="pill-icon">📝</span> Paste or upload transcripts (.txt)
+          </div>
+          <div class="pill-item">
+            <span class="pill-icon">🎙️</span> Audio transcription (MP3, WAV, M4A, FLAC)
+          </div>
+          <div class="pill-item">
+            <span class="pill-icon">🃏</span> 3D Flip Flashcards & Quizzes
+          </div>
+          <div class="pill-item">
+            <span class="pill-icon">📄</span> Export Markdown, Text, or PDF
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="section section-alt">
+      <div class="container">
+        <div class="section-header text-center">
+          <span class="section-tag">Simple 3-Step Process</span>
+          <h2 class="section-title">How LectureLens Works</h2>
+          <p class="section-desc">From unstructured lecture audio or transcript to exam-ready study notes in three steps.</p>
+        </div>
+
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-number">01</div>
+            <div class="step-icon-wrap">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <h3 class="step-title">1. Input Lecture Material</h3>
+            <p class="step-text">Paste your raw lecture notes, upload a <code>.txt</code> file, or drop an audio recording. Gemini transcribes audio accurately and lets you review it.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">02</div>
+            <div class="step-icon-wrap">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </div>
+            <h3 class="step-title">2. Customize Preferences</h3>
+            <p class="step-text">Choose your detail depth (Concise, Standard, or Detailed), select your language (English, Hindi, or Auto), and toggle exam questions and flashcards.</p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-number">03</div>
+            <div class="step-icon-wrap">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <h3 class="step-title">3. Master & Export</h3>
+            <p class="step-text">Review structured notes with clear headings, flip through 3D flashcards, test yourself with practice questions, and download as clean PDF, Markdown, or Text.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Studio Workspace Section -->
+    <section id="studio" class="section studio-section">
+      <div class="container">
+        <div class="section-header text-center">
+          <span class="section-tag">Interactive Workspace</span>
+          <h2 class="section-title">Notes Generation Studio</h2>
+          <p class="section-desc">Paste, upload, or transcribe your lecture. Customize your preferences and let Gemini synthesize your notes.</p>
+        </div>
+
+        <div class="studio-card">
+          <!-- Input Options Tabs -->
+          <div class="input-tabs-header">
+            <button type="button" class="tab-button active" data-input-tab="tab-paste">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+              </svg>
+              Option 1: Paste Transcript
+            </button>
+            <button type="button" class="tab-button" data-input-tab="tab-upload-txt">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              Option 2: Upload Text File
+            </button>
+            <button type="button" class="tab-button" data-input-tab="tab-upload-audio">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+              Option 3: Upload Lecture Audio
+            </button>
+          </div>
+
+          <!-- Input Tab Contents -->
+          <div class="input-tabs-body">
+            
+            <!-- Option 1: Paste Transcript -->
+            <div id="tab-paste" class="input-tab-pane active">
+              <div class="textarea-toolbar">
+                <label for="transcriptText" class="form-label">
+                  <strong>Lecture Transcript</strong>
+                  <span class="text-muted">(Paste text or click Load Sample)</span>
+                </label>
+                <div class="textarea-actions">
+                  <button type="button" class="btn btn-xs btn-outline" id="loadSampleBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                    </svg>
+                    Load Sample Lecture
+                  </button>
+                  <button type="button" class="btn btn-xs btn-ghost" id="clearTextBtn">Clear</button>
+                </div>
+              </div>
+
+              <textarea 
+                id="transcriptText" 
+                class="form-control transcript-textarea" 
+                rows="10" 
+                placeholder="Paste your raw lecture transcript, notes, or spoken text here... (Minimum 20 characters)"></textarea>
+
+              <div class="textarea-footer">
+                <span id="charCount">0 characters</span>
+                <span id="wordCount">0 words</span>
+              </div>
+            </div>
+
+            <!-- Option 2: Upload Text File -->
+            <div id="tab-upload-txt" class="input-tab-pane">
+              <div class="dropzone" id="txtDropzone">
+                <input type="file" id="txtFileInput" accept=".txt,text/plain" style="display: none;">
+                <div class="dropzone-content">
+                  <div class="dropzone-icon">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="12" y1="18" x2="12" y2="12"></line>
+                      <line x1="9" y1="15" x2="15" y2="15"></line>
+                    </svg>
+                  </div>
+                  <h4>Drag and drop your <code>.txt</code> transcript file here</h4>
+                  <p class="dropzone-sub">or <button type="button" class="btn-link" id="browseTxtBtn">browse files</button> from your device</p>
+                  <span class="dropzone-hint">Supports UTF-8 encoded text files up to 10MB</span>
+                </div>
+              </div>
+
+              <!-- Selected File Card (hidden by default) -->
+              <div id="txtFileInfoCard" class="file-info-card" style="display: none;">
+                <div class="file-info-left">
+                  <span class="file-badge">TXT</span>
+                  <div>
+                    <h5 id="txtFileName" class="file-name">lecture.txt</h5>
+                    <span id="txtFileSize" class="file-meta">0 KB • 0 words</span>
+                  </div>
+                </div>
+                <div class="file-info-actions">
+                  <button type="button" class="btn btn-xs btn-outline" id="replaceTxtBtn">Replace</button>
+                  <button type="button" class="btn btn-xs btn-ghost text-danger" id="removeTxtBtn">Remove</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Option 3: Upload Lecture Audio -->
+            <div id="tab-upload-audio" class="input-tab-pane">
+              <div class="dropzone" id="audioDropzone">
+                <input type="file" id="audioFileInput" accept=".mp3,.wav,.m4a,.aac,.flac,.ogg,.webm,audio/*" style="display: none;">
+                <div class="dropzone-content">
+                  <div class="dropzone-icon text-indigo">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                      <line x1="12" y1="19" x2="12" y2="23"></line>
+                      <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                  </div>
+                  <h4>Upload your lecture audio recording</h4>
+                  <p class="dropzone-sub">Drag and drop audio or <button type="button" class="btn-link" id="browseAudioBtn">browse files</button></p>
+                  <span class="dropzone-hint">Supported formats: MP3, WAV, M4A, AAC, FLAC, OGG (Max {{ max_upload_mb }}MB)</span>
+                </div>
+              </div>
+
+              <!-- Selected Audio File Card -->
+              <div id="audioFileInfoCard" class="file-info-card" style="display: none;">
+                <div class="file-info-left">
+                  <span class="file-badge badge-audio">AUDIO</span>
+                  <div>
+                    <h5 id="audioFileName" class="file-name">lecture.mp3</h5>
+                    <span id="audioFileSize" class="file-meta">0 MB</span>
+                  </div>
+                </div>
+                <div class="file-info-actions">
+                  <button type="button" class="btn btn-sm btn-primary" id="transcribeBtn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    </svg>
+                    Transcribe with Gemini
+                  </button>
+                  <button type="button" class="btn btn-xs btn-ghost text-danger" id="removeAudioBtn">Remove</button>
+                </div>
+              </div>
+
+              <!-- Audio Transcription Progress Indicator -->
+              <div id="transcribeProgress" class="process-progress-box" style="display: none;">
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar-fill indeterminate"></div>
+                </div>
+                <div class="progress-step-text">
+                  <span class="spinner-sm"></span>
+                  <span id="transcribeStepMsg">Sending audio to Gemini API for transcription...</span>
+                </div>
+              </div>
+
+              <!-- Extracted Transcript Review Area -->
+              <div id="transcribedReviewBox" class="transcribed-review-box" style="display: none;">
+                <div class="review-header">
+                  <div>
+                    <h4>Extracted Transcript</h4>
+                    <span class="text-muted" id="transcribedMeta">Transcribed with Gemini • 0 words</span>
+                  </div>
+                  <span class="badge badge-success">Transcription Complete</span>
+                </div>
+                <p class="review-sub">Review or edit the transcribed text below before generating notes:</p>
+                <textarea id="audioExtractedText" class="form-control transcript-textarea" rows="6"></textarea>
+                <div class="review-actions">
+                  <button type="button" class="btn btn-sm btn-outline" id="useAudioTranscriptBtn">
+                    Use This Transcript for Notes
+                  </button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Preferences & Metadata Panel -->
+          <div class="preferences-panel">
+            <h3 class="panel-title">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+              Note Preferences & Configuration
+            </h3>
+
+            <div class="pref-grid">
+              <!-- Lecture Title -->
+              <div class="form-group">
+                <label for="lectureTitle" class="form-label">Lecture Title <span class="text-muted">(Optional)</span></label>
+                <input type="text" id="lectureTitle" class="form-control" placeholder="e.g. Distributed Systems & CAP Theorem">
+              </div>
+
+              <!-- Subject / Topic -->
+              <div class="form-group">
+                <label for="lectureSubject" class="form-label">Subject / Course <span class="text-muted">(Optional)</span></label>
+                <input type="text" id="lectureSubject" class="form-control" placeholder="e.g. Computer Science 101">
+              </div>
+
+              <!-- Output Language -->
+              <div class="form-group">
+                <label for="outputLanguage" class="form-label">Output Language</label>
+                <select id="outputLanguage" class="form-control">
+                  <option value="auto" selected>Auto (Follow Source Language)</option>
+                  <option value="english">English</option>
+                  <option value="hindi">Hindi (हिंदी)</option>
+                </select>
+              </div>
+
+              <!-- Detail Level -->
+              <div class="form-group">
+                <label class="form-label">Detail Level</label>
+                <div class="radio-pill-group">
+                  <label class="radio-pill">
+                    <input type="radio" name="detailLevel" value="concise">
+                    <span>Concise</span>
+                  </label>
+                  <label class="radio-pill">
+                    <input type="radio" name="detailLevel" value="standard" checked>
+                    <span>Standard</span>
+                  </label>
+                  <label class="radio-pill">
+                    <input type="radio" name="detailLevel" value="detailed">
+                    <span>Detailed</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Content Section Toggles -->
+            <div class="toggles-row">
+              <label class="toggle-checkbox">
+                <input type="checkbox" id="prefKeyTerms" checked>
+                <span class="toggle-switch"></span>
+                <span class="toggle-label">Key Terms & Definitions</span>
+              </label>
+
+              <label class="toggle-checkbox">
+                <input type="checkbox" id="prefExamples" checked>
+                <span class="toggle-switch"></span>
+                <span class="toggle-label">Formulas, Calculations & Code</span>
+              </label>
+
+              <label class="toggle-checkbox">
+                <input type="checkbox" id="prefQuestions" checked>
+                <span class="toggle-switch"></span>
+                <span class="toggle-label">Practice Exam Questions</span>
+              </label>
+
+              <label class="toggle-checkbox">
+                <input type="checkbox" id="prefFlashcards" checked>
+                <span class="toggle-switch"></span>
+                <span class="toggle-label">Study Flashcards</span>
+              </label>
+            </div>
+
+            <!-- Main Generation Action Bar -->
+            <div class="studio-action-bar">
+              <button type="button" class="btn btn-primary btn-lg" id="generateNotesBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                </svg>
+                <span id="generateBtnText">Generate Smart Notes</span>
+              </button>
+
+              <button type="button" class="btn btn-ghost" id="resetWorkspaceBtn">
+                Reset All
+              </button>
+            </div>
+
+            <!-- Active Generation Progress Bar -->
+            <div id="notesGenerationProgress" class="process-progress-box" style="display: none;">
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill indeterminate"></div>
+              </div>
+              <div class="progress-step-text">
+                <span class="spinner-sm"></span>
+                <span id="notesStepMsg">Analyzing transcript with Gemini 2.5...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rendered Results Section -->
+        {% include "components/notes.html" %}
+
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="section section-alt">
+      <div class="container">
+        <div class="section-header text-center">
+          <span class="section-tag">Engineered for Academic Excellence</span>
+          <h2 class="section-title">Everything You Need to Ace Your Exams</h2>
+          <p class="section-desc">LectureLens doesn't just summarize — it creates an entire study companion.</p>
+        </div>
+
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon bg-blue-subtle">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+            </div>
+            <h3>Hierarchical Study Notes</h3>
+            <p>Clear, logical topic structure with executive summaries, takeaways, and beginner-accessible explanations of dense concepts.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon bg-indigo-subtle">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+                <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+              </svg>
+            </div>
+            <h3>Interactive 3D Flashcards</h3>
+            <p>Test your active recall with beautiful flip cards generated directly from the lecture terminology and key principles.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon bg-green-subtle">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <h3>Exam Questions & Answers</h3>
+            <p>Anticipate exam questions with difficulty ratings and expand-to-reveal model answers calibrated to academic standards.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon bg-purple-subtle">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+            </div>
+            <h3>Multi-Format Export</h3>
+            <p>Download clean Markdown for Obsidian/Notion, readable Plain Text for quick reading, or formatted ReportLab PDF for printing.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon bg-amber-subtle">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                <line x1="12" y1="19" x2="12" y2="23"></line>
+                <line x1="8" y1="23" x2="16" y2="23"></line>
+              </svg>
+            </div>
+            <h3>Direct Audio Transcription</h3>
+            <p>Drop audio files in MP3, WAV, M4A, or FLAC. Gemini's speech models transcribe the recording with academic terminology fidelity.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon bg-rose-subtle">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <h3>Privacy & Ephemeral Storage</h3>
+            <p>No account required, no database, and zero audio storage on disk. Your recordings are processed securely and deleted immediately.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Privacy, Ethics & Cost Disclosure Section -->
+    <section id="privacy" class="section">
+      <div class="container">
+        <div class="privacy-box">
+          <div class="privacy-header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-primary">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <h3>Privacy, Data Handling & AI Usage Policy</h3>
+          </div>
+          <div class="privacy-grid">
+            <div class="privacy-item">
+              <h4>Zero Local Retention</h4>
+              <p>LectureLens does not store transcripts or audio recordings on the server. Audio files uploaded for transcription are removed immediately after processing.</p>
+            </div>
+            <div class="privacy-item">
+              <h4>Google Gemini Processing</h4>
+              <p>Transcripts and audio are transmitted securely to Google's Gemini API for inference. Processing is subject to Google Cloud & AI Studio data terms.</p>
+            </div>
+            <div class="privacy-item">
+              <h4>API Quotas & Billing</h4>
+              <p>Gemini API usage, speed, and quotas depend on your own Google AI Studio account. Free tier quotas apply according to Google's current terms.</p>
+            </div>
+            <div class="privacy-item">
+              <h4>Academic Integrity Disclaimer</h4>
+              <p>AI-synthesized notes are study aids designed to assist revision. Students must always cross-reference primary lecture materials, textbooks, and course syllabi.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <div class="container footer-container">
+      <div class="footer-brand">
+        <div class="brand-link">
+          <div class="brand-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <circle cx="12" cy="12" r="9"></circle>
+              <circle cx="12" cy="12" r="3.5"></circle>
+            </svg>
+          </div>
+          <span class="brand-name">LectureLens</span>
+        </div>
+        <p class="footer-tagline">Turn lectures into learning. Smart study notes generator powered by Google Gemini.</p>
+      </div>
+
+      <div class="footer-links">
+        <a href="#how-it-works">How It Works</a>
+        <a href="#studio">Studio Workspace</a>
+        <a href="#features">Features</a>
+        <a href="#privacy">Privacy Notice</a>
+        <a href="/health" target="_blank">Health Check</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container">
+        <p>© 2026 LectureLens. Built with Flask, Google Gemini SDK, ReportLab & Vanilla JS. Portfolio & Educational Project.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Script -->
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
