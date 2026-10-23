@@ -12,6 +12,7 @@ from typing import Dict, Any, Optional
 from google import genai
 from google.genai import types
 from google.genai.errors import APIError
+from dotenv import load_dotenv
 
 logger = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ def get_gemini_client() -> genai.Client:
     Instantiate and return a Gemini Client.
     Validates server-side GEMINI_API_KEY environment variable.
     """
+    load_dotenv(override=True)
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
 
     if not api_key or api_key == "your_gemini_api_key_here":

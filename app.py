@@ -97,6 +97,7 @@ def add_security_headers(response: Response) -> Response:
 @app.route("/")
 def index():
     """Render the homepage & studio workspace."""
+    load_dotenv(override=True)
     has_api_key = bool(os.getenv("GEMINI_API_KEY", "").strip() and os.getenv("GEMINI_API_KEY") != "your_gemini_api_key_here")
     return render_template(
         "index.html",
@@ -109,6 +110,7 @@ def index():
 @app.route("/health", methods=["GET"])
 def health_check():
     """Deployment and uptime health check."""
+    load_dotenv(override=True)
     has_api_key = bool(os.getenv("GEMINI_API_KEY", "").strip() and os.getenv("GEMINI_API_KEY") != "your_gemini_api_key_here")
     return jsonify({
         "status": "healthy",
