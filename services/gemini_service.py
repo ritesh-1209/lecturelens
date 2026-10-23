@@ -36,7 +36,7 @@ def get_gemini_client() -> genai.Client:
 
 def get_notes_model() -> str:
     """Return configured model for note generation."""
-    return os.getenv("GEMINI_NOTES_MODEL", "gemini-2.5-flash").strip()
+    return os.getenv("GEMINI_NOTES_MODEL", "gemini-3.5-flash").strip()
 
 
 def build_system_instruction(
@@ -253,11 +253,27 @@ LECTURE TRANSCRIPT:
     )
 
     try:
-        response = client.models.generate_content(
-            model=model_name,
-            contents=user_prompt,
-            config=config,
-        )
+        response = None
+        used_model = model_name
+        models_to_try = [model_name]
+        if "gemini-3.5-flash" not in models_to_try:
+            models_to_try.append("gemini-3.5-flash")
+
+        for try_model in models_to_try:
+            try:
+                response = client.models.generate_content(
+                    model=try_model,
+                    contents=user_prompt,
+                    config=config,
+                )
+                used_model = try_model
+                break
+            except APIError as m_err:
+                msg = str(m_err)
+                if ("404" in msg or "503" in msg or "NOT_FOUND" in msg.upper()) and try_model != models_to_try[-1]:
+                    logger.warning("Model '%s' failed, attempting fallback to '%s'", try_model, models_to_try[-1])
+                    continue
+                raise
 
         if not response or not response.text:
             raise ValueError("Empty response received from the Gemini model.")

@@ -117,8 +117,8 @@ def health_check():
         "service": "LectureLens",
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "gemini_configured": has_api_key,
-        "notes_model": os.getenv("GEMINI_NOTES_MODEL", "gemini-2.5-flash"),
-        "transcription_model": os.getenv("GEMINI_TRANSCRIPTION_MODEL", "gemini-2.5-flash"),
+        "notes_model": os.getenv("GEMINI_NOTES_MODEL", "gemini-3.5-flash"),
+        "transcription_model": os.getenv("GEMINI_TRANSCRIPTION_MODEL", "gemini-3.5-transcribe"),
     }), 200
 
 

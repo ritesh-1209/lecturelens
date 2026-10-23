@@ -43,7 +43,7 @@ ALLOWED_MIME_TYPES = {
 
 def get_transcription_model() -> str:
     """Return configured model for audio transcription."""
-    return os.getenv("GEMINI_TRANSCRIPTION_MODEL", "gemini-2.5-flash").strip()
+    return os.getenv("GEMINI_TRANSCRIPTION_MODEL", "gemini-3.5-transcribe").strip()
 
 
 def validate_audio_file(filename: str, mime_type: str = "") -> Tuple[bool, str, str]:
