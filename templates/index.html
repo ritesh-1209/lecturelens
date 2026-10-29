@@ -209,8 +209,11 @@
         </div>
 
         <div class="studio-card">
-          <!-- Input Options Tabs -->
-          <div class="input-tabs-header">
+          <div class="studio-workspace-deck">
+            <!-- Left Column: Input Material -->
+            <div class="studio-input-column">
+              <!-- Input Options Tabs -->
+              <div class="input-tabs-header">
             <button type="button" class="tab-button active" data-input-tab="tab-paste">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
@@ -372,12 +375,13 @@
                   </button>
                 </div>
               </div>
+              </div>
             </div>
 
-          </div>
-
-          <!-- Preferences & Metadata Panel -->
-          <div class="preferences-panel">
+            <!-- Right Column: Synthesis Parameters & Action Deck -->
+            <div class="studio-config-column">
+              <!-- Preferences & Metadata Panel -->
+              <div class="preferences-panel">
             <h3 class="panel-title">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="3"></circle>
@@ -479,6 +483,7 @@
                 <span class="spinner-sm"></span>
                 <span id="notesStepMsg">Analyzing transcript with Gemini 2.5...</span>
               </div>
+            </div>
             </div>
           </div>
         </div>
